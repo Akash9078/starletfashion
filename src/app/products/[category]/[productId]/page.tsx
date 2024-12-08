@@ -138,11 +138,12 @@ export default function ProductPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Related Products */}
+        {/* Related Products Sections */}
         <div className="space-y-12 mt-12">
+          {/* Collection Products */}
           {collectionProducts.length > 0 && (
             <section>
-              <h2 className="text-xl font-bold mb-6">
+              <h2 className="text-2xl font-bold mb-6">
                 More from {product.collection}
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -156,16 +157,17 @@ export default function ProductPage({ params }: Props) {
             </section>
           )}
 
+          {/* Brand Products */}
           {brandProducts.length > 0 && (
             <section>
-              <h2 className="text-xl font-bold mb-6">
+              <h2 className="text-2xl font-bold mb-6">
                 More from {product.brand}
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {brandProducts.map((product) => (
+                {brandProducts.map((brandProduct) => (
                   <ProductCard 
-                    key={`${product.title}-${product.brand}`} 
-                    product={product}
+                    key={`${brandProduct.title}-${brandProduct.brand}`} 
+                    product={brandProduct}
                   />
                 ))}
               </div>
