@@ -5,11 +5,8 @@ import { getSheetData } from '@/lib/sheets';
 import { Product } from '@/lib/sheets';
 import { CATEGORIES, type Category } from '@/config/constants';
 import { useRouter } from 'next/navigation';
-import Breadcrumb from '@/components/Breadcrumb';
-import ProductImageGallery from '@/components/ProductImageGallery';
-import ProductDetails from '@/components/ProductDetails';
-import ProductCard from '@/components/ProductCard';
 import { findProductBySlug } from '@/utils/productUtils';
+import Link from 'next/link';
 
 interface Props {
   params: {
@@ -21,8 +18,7 @@ interface Props {
 export default function ProductPage({ params }: Props) {
   const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
-  const [collectionProducts, setCollectionProducts] = useState<Product[]>([]);
-  const [brandProducts, setBrandProducts] = useState<Product[]>([]);
+  const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,13 +28,11 @@ export default function ProductPage({ params }: Props) {
         setIsLoading(true);
         setError(null);
 
-        // Validate category
         if (!CATEGORIES.includes(params.category as Category)) {
           setError('Invalid category');
           return;
         }
 
-        // Fetch all products from this category
         const products = await getSheetData(params.category as Category);
         
         if (!products || products.length === 0) {
@@ -46,7 +40,6 @@ export default function ProductPage({ params }: Props) {
           return;
         }
 
-        // Find the current product
         const currentProduct = findProductBySlug(products, params.productId);
 
         if (!currentProduct) {
@@ -56,32 +49,12 @@ export default function ProductPage({ params }: Props) {
 
         setProduct(currentProduct);
 
-        // Get collection products (excluding current product)
-        if (currentProduct.collection) {
-          const sameCollection = products
-            .filter(p => 
-              p.collection === currentProduct.collection && 
-              p.title !== currentProduct.title
-            )
-            .slice(0, 4); // Limit to 4 products
-            
-          console.log('Collection products:', sameCollection); // Debug log
-          setCollectionProducts(sameCollection);
-        }
+        // Get similar products from the same brand
+        const similar = products
+          .filter(p => p.brand === currentProduct.brand && p.title !== currentProduct.title)
+          .slice(0, 8); // Show up to 8 similar products
 
-        // Get brand products (excluding current product)
-        if (currentProduct.brand) {
-          const sameBrand = products
-            .filter(p => 
-              p.brand === currentProduct.brand && 
-              p.title !== currentProduct.title &&
-              (!currentProduct.collection || p.collection !== currentProduct.collection)
-            )
-            .slice(0, 4); // Limit to 4 products
-            
-          console.log('Brand products:', sameBrand); // Debug log
-          setBrandProducts(sameBrand);
-        }
+        setSimilarProducts(similar);
 
       } catch (error) {
         console.error('Error fetching product:', error);
@@ -121,70 +94,86 @@ export default function ProductPage({ params }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-6">
-        <Breadcrumb 
-          category={params.category}
-          productName={product?.title}
-        />
-
-        {/* Product Details Section */}
-        <div className="bg-white rounded-lg shadow-sm mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-4 md:p-6 lg:p-8">
-            {/* Image Gallery */}
-            <div className="w-full max-w-2xl mx-auto">
-              <ProductImageGallery 
-                images={[
-                  product.image1,
-                  product.image2,
-                  product.image3
-                ].filter((image): image is string => !!image)}
-              />
+        {/* Product Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <img 
+              src={product.brandLogo || '/placeholder-logo.png'} 
+              alt={product.brand}
+              className="w-12 h-12 rounded-full object-cover"
+            />
+            <div>
+              <h1 className="text-2xl font-bold">{product.brand}</h1>
+              <p className="text-gray-600">₹{product.price.toFixed(2)}</p>
             </div>
+          </div>
+          <button className="bg-purple-600 text-white px-6 py-2 rounded-full">
+            Download App to Buy
+          </button>
+        </div>
 
-            {/* Product Info */}
-            <div className="lg:sticky lg:top-4">
-              <ProductDetails product={product} />
+        {/* Product Gallery and Details */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+          {/* Main Product Image */}
+          <div className="aspect-[3/4] rounded-lg overflow-hidden">
+            <img
+              src={product.image1}
+              alt={product.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          {/* Product Info */}
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold">{product.title}</h2>
+            <div className="prose max-w-none">
+              <p>{product.description}</p>
+            </div>
+            
+            {/* Additional Details */}
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-medium text-gray-700">Collection</h3>
+                <p>{product.collection}</p>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-700">Material</h3>
+                <p>{product.material}</p>
+              </div>
+              {product.size && (
+                <div>
+                  <h3 className="font-medium text-gray-700">Size</h3>
+                  <p>{product.size}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Related Products */}
-        {(collectionProducts.length > 0 || brandProducts.length > 0) && (
-          <div className="space-y-12 mt-12">
-            {/* Collection Products */}
-            {collectionProducts.length > 0 && product?.collection && (
-              <section className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-2xl font-bold mb-6">
-                  More from {product.collection} Collection
-                </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {collectionProducts.map((relatedProduct) => (
-                    <ProductCard 
-                      key={`collection-${relatedProduct.title}-${relatedProduct.brand}`} 
-                      product={relatedProduct}
+        {/* Similar Products */}
+        {similarProducts.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-xl font-bold mb-6">Similar Products from {product.brand}</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {similarProducts.map((similarProduct) => (
+                <Link
+                  key={`${similarProduct.title}-${similarProduct.brand}`}
+                  href={`/products/${similarProduct.category}/${findProductBySlug(similarProduct.title, similarProduct.brand)}`}
+                  className="group"
+                >
+                  <div className="aspect-[3/4] rounded-lg overflow-hidden mb-2">
+                    <img
+                      src={similarProduct.image1}
+                      alt={similarProduct.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Brand Products */}
-            {brandProducts.length > 0 && product?.brand && (
-              <section className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-2xl font-bold mb-6">
-                  More from {product.brand}
-                </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {brandProducts.map((brandProduct) => (
-                    <ProductCard 
-                      key={`brand-${brandProduct.title}-${brandProduct.brand}`} 
-                      product={brandProduct}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
+                  </div>
+                  <p className="text-sm font-medium">₹{similarProduct.price.toFixed(2)}</p>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
       </div>
