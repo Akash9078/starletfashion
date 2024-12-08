@@ -38,6 +38,7 @@ export default function ProductPage({ params }: Props) {
           return;
         }
 
+        // Fetch all products from this category
         const products = await getSheetData(params.category as Category);
         
         if (!products || products.length === 0) {
@@ -45,6 +46,7 @@ export default function ProductPage({ params }: Props) {
           return;
         }
 
+        // Find the current product
         const currentProduct = findProductBySlug(products, params.productId);
 
         if (!currentProduct) {
@@ -54,23 +56,24 @@ export default function ProductPage({ params }: Props) {
 
         setProduct(currentProduct);
 
-        // Get collection products
-        const sameCollection = products
-          .filter(p => 
+        // Get collection products (excluding current product)
+        if (currentProduct.collection) {
+          const sameCollection = products.filter(p => 
             p.collection === currentProduct.collection && 
             p.title !== currentProduct.title
-          )
-          .slice(0, 4);
-        setCollectionProducts(sameCollection);
+          );
+          setCollectionProducts(sameCollection.slice(0, 4));
+        }
 
-        // Get brand products
-        const sameBrand = products
-          .filter(p => 
+        // Get brand products (excluding current product and collection products)
+        if (currentProduct.brand) {
+          const sameBrand = products.filter(p => 
             p.brand === currentProduct.brand && 
-            p.title !== currentProduct.title
-          )
-          .slice(0, 4);
-        setBrandProducts(sameBrand);
+            p.title !== currentProduct.title &&
+            p.collection !== currentProduct.collection // Exclude products already shown in collection
+          );
+          setBrandProducts(sameBrand.slice(0, 4));
+        }
 
       } catch (error) {
         console.error('Error fetching product:', error);
@@ -114,7 +117,7 @@ export default function ProductPage({ params }: Props) {
       <div className="container mx-auto px-4 py-6">
         <Breadcrumb 
           category={params.category}
-          productName={product.title}
+          productName={product?.title}
         />
 
         {/* Product Details Section */}
@@ -138,18 +141,18 @@ export default function ProductPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Related Products Sections */}
+        {/* Related Products */}
         <div className="space-y-12 mt-12">
           {/* Collection Products */}
           {collectionProducts.length > 0 && (
             <section>
               <h2 className="text-2xl font-bold mb-6">
-                More from {product.collection}
+                More from the {product?.collection} Collection
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {collectionProducts.map((relatedProduct) => (
                   <ProductCard 
-                    key={`${relatedProduct.title}-${relatedProduct.brand}`} 
+                    key={`collection-${relatedProduct.title}-${relatedProduct.brand}`} 
                     product={relatedProduct}
                   />
                 ))}
@@ -161,12 +164,12 @@ export default function ProductPage({ params }: Props) {
           {brandProducts.length > 0 && (
             <section>
               <h2 className="text-2xl font-bold mb-6">
-                More from {product.brand}
+                More from {product?.brand}
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {brandProducts.map((brandProduct) => (
                   <ProductCard 
-                    key={`${brandProduct.title}-${brandProduct.brand}`} 
+                    key={`brand-${brandProduct.title}-${brandProduct.brand}`} 
                     product={brandProduct}
                   />
                 ))}
