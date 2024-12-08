@@ -4,4 +4,4 @@ services:
     env: node
     buildCommand: npm install && npm run build
     startCommand: npm start
-    nodeVersion: 18.x 
+    nodeVersion: 18.17.0 

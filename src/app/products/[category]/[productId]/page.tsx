@@ -126,11 +126,8 @@ export default function ProductPage({ params }: Props) {
                 images={[
                   product.image1,
                   product.image2,
-                  product.image3,
-                  product.image4,
-                  product.image5,
-                  product.image6,
-                ].filter(Boolean)}
+                  product.image3
+                ].filter((image): image is string => !!image)}
               />
             </div>
 
