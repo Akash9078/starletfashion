@@ -98,19 +98,12 @@ export default function ProductPage({ params }: Props) {
       <div className="container mx-auto px-4 py-6">
         {/* Product Header */}
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <img 
-              src={product.brandLogo || '/placeholder-logo.png'} 
-              alt={product.brand}
-              className="w-12 h-12 rounded-full object-cover"
-            />
-            <div>
-              <h1 className="text-2xl font-bold">{product.brand}</h1>
-              <p className="text-gray-600">₹{product.price.toFixed(2)}</p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold">{product.title}</h1>
+            <p className="text-gray-600">₹{product.price.toFixed(2)}</p>
           </div>
           <button className="bg-purple-600 text-white px-6 py-2 rounded-full">
-            Download App to Buy
+            Buy Now
           </button>
         </div>
 
@@ -127,25 +120,26 @@ export default function ProductPage({ params }: Props) {
 
           {/* Product Info */}
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold">{product.title}</h2>
             <div className="prose max-w-none">
               <p>{product.description}</p>
             </div>
             
-            {/* Additional Details */}
+            {/* Product Details */}
             <div className="space-y-4">
               <div>
-                <h3 className="font-medium text-gray-700">Collection</h3>
-                <p>{product.collection}</p>
+                <h3 className="font-medium text-gray-700">Brand</h3>
+                <p>{product.brand}</p>
               </div>
-              <div>
-                <h3 className="font-medium text-gray-700">Material</h3>
-                <p>{product.material}</p>
-              </div>
-              {product.size && (
+              {product.collection && (
                 <div>
-                  <h3 className="font-medium text-gray-700">Size</h3>
-                  <p>{product.size}</p>
+                  <h3 className="font-medium text-gray-700">Collection</h3>
+                  <p>{product.collection}</p>
+                </div>
+              )}
+              {product.material && (
+                <div>
+                  <h3 className="font-medium text-gray-700">Material</h3>
+                  <p>{product.material}</p>
                 </div>
               )}
             </div>
@@ -160,7 +154,7 @@ export default function ProductPage({ params }: Props) {
               {similarProducts.map((similarProduct) => (
                 <Link
                   key={`${similarProduct.title}-${similarProduct.brand}`}
-                  href={`/products/${similarProduct.category}/${findProductBySlug(similarProduct.title, similarProduct.brand)}`}
+                  href={`/products/${params.category}/${findProductBySlug(similarProduct.title, similarProduct.brand)}`}
                   className="group"
                 >
                   <div className="aspect-[3/4] rounded-lg overflow-hidden mb-2">
@@ -170,7 +164,10 @@ export default function ProductPage({ params }: Props) {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
-                  <p className="text-sm font-medium">₹{similarProduct.price.toFixed(2)}</p>
+                  <div className="mt-2">
+                    <p className="text-sm font-medium truncate">{similarProduct.title}</p>
+                    <p className="text-sm text-gray-600">₹{similarProduct.price.toFixed(2)}</p>
+                  </div>
                 </Link>
               ))}
             </div>
