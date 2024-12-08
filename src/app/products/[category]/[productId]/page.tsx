@@ -58,21 +58,29 @@ export default function ProductPage({ params }: Props) {
 
         // Get collection products (excluding current product)
         if (currentProduct.collection) {
-          const sameCollection = products.filter(p => 
-            p.collection === currentProduct.collection && 
-            p.title !== currentProduct.title
-          );
-          setCollectionProducts(sameCollection.slice(0, 4));
+          const sameCollection = products
+            .filter(p => 
+              p.collection === currentProduct.collection && 
+              p.title !== currentProduct.title
+            )
+            .slice(0, 4); // Limit to 4 products
+            
+          console.log('Collection products:', sameCollection); // Debug log
+          setCollectionProducts(sameCollection);
         }
 
-        // Get brand products (excluding current product and collection products)
+        // Get brand products (excluding current product)
         if (currentProduct.brand) {
-          const sameBrand = products.filter(p => 
-            p.brand === currentProduct.brand && 
-            p.title !== currentProduct.title &&
-            p.collection !== currentProduct.collection // Exclude products already shown in collection
-          );
-          setBrandProducts(sameBrand.slice(0, 4));
+          const sameBrand = products
+            .filter(p => 
+              p.brand === currentProduct.brand && 
+              p.title !== currentProduct.title &&
+              (!currentProduct.collection || p.collection !== currentProduct.collection)
+            )
+            .slice(0, 4); // Limit to 4 products
+            
+          console.log('Brand products:', sameBrand); // Debug log
+          setBrandProducts(sameBrand);
         }
 
       } catch (error) {
@@ -142,41 +150,43 @@ export default function ProductPage({ params }: Props) {
         </div>
 
         {/* Related Products */}
-        <div className="space-y-12 mt-12">
-          {/* Collection Products */}
-          {collectionProducts.length > 0 && (
-            <section>
-              <h2 className="text-2xl font-bold mb-6">
-                More from the {product?.collection} Collection
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {collectionProducts.map((relatedProduct) => (
-                  <ProductCard 
-                    key={`collection-${relatedProduct.title}-${relatedProduct.brand}`} 
-                    product={relatedProduct}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
+        {(collectionProducts.length > 0 || brandProducts.length > 0) && (
+          <div className="space-y-12 mt-12">
+            {/* Collection Products */}
+            {collectionProducts.length > 0 && product?.collection && (
+              <section className="bg-white rounded-lg shadow-sm p-6">
+                <h2 className="text-2xl font-bold mb-6">
+                  More from {product.collection} Collection
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {collectionProducts.map((relatedProduct) => (
+                    <ProductCard 
+                      key={`collection-${relatedProduct.title}-${relatedProduct.brand}`} 
+                      product={relatedProduct}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
 
-          {/* Brand Products */}
-          {brandProducts.length > 0 && (
-            <section>
-              <h2 className="text-2xl font-bold mb-6">
-                More from {product?.brand}
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {brandProducts.map((brandProduct) => (
-                  <ProductCard 
-                    key={`brand-${brandProduct.title}-${brandProduct.brand}`} 
-                    product={brandProduct}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
+            {/* Brand Products */}
+            {brandProducts.length > 0 && product?.brand && (
+              <section className="bg-white rounded-lg shadow-sm p-6">
+                <h2 className="text-2xl font-bold mb-6">
+                  More from {product.brand}
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {brandProducts.map((brandProduct) => (
+                    <ProductCard 
+                      key={`brand-${brandProduct.title}-${brandProduct.brand}`} 
+                      product={brandProduct}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
